@@ -15,8 +15,26 @@ ParteeWindow::ParteeWindow(int width, int height) : width(width), height(height)
 ParteeWindow::~ParteeWindow()
 {
     // Clean up OpenGL resources
-    if (hrc)
-    {
+    if (hrc) {
+        wglMakeCurrent(hdc, hrc); // Make context current for cleanup
+        
+        // Clean up OpenGL objects
+        if (VAO != 0) {
+            glDeleteVertexArrays(1, &VAO);
+        }
+        if (VBO != 0) {
+            glDeleteBuffers(1, &VBO);
+        }
+        if (textureID != 0) {
+            glDeleteTextures(1, &textureID);
+        }
+        if (shaderProgram != 0) {
+            glDeleteProgram(shaderProgram);
+        }
+        if (pixelData != nullptr) {
+            delete[] pixelData;
+        }
+        
         wglMakeCurrent(NULL, NULL);
         wglDeleteContext(hrc);
     }
@@ -40,37 +58,24 @@ void ParteeWindow::show()
 
 void ParteeWindow::render()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     // Update texture with new pixel data
+    glBindTexture(GL_TEXTURE_2D, textureID);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 
-    // Render the pixel buffer as a textured quad
-    glEnable(GL_TEXTURE_2D);
+    // Use our shader program
+    glUseProgram(shaderProgram);
+    
+    // Bind texture
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, width, 0, height, -1, 1);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glBegin(GL_QUADS);
-        glTexCoord2f(-1, 1); glVertex2i(-width, -height);
-        glTexCoord2f(1, 1); glVertex2i(width, -height);
-        glTexCoord2f(1, -1); glVertex2i(width, height);
-        glTexCoord2f(0-1, -1); glVertex2i(-width, height);
-    glEnd();
-
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-
-    glDisable(GL_TEXTURE_2D);
+    // Render the fullscreen quad using modern OpenGL
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
     
     SwapBuffers(hdc);
 }
@@ -180,12 +185,12 @@ void ParteeWindow::setUpOGL(HWND hwnd) {
         }
     }
 
-    const char* vertexShaderSource = R"(
+    const char *vertexShaderSource = R"(
         #version 330 core
         layout(location = 0) in vec2 position;
 
         void main() {
-            gl_Position = vec4(position.xy, 0.0, 1.0);
+            gl_Position = vec4(position, 0.0, 1.0);
         }
     )";
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -206,14 +211,23 @@ void ParteeWindow::setUpOGL(HWND hwnd) {
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    unsigned int shaderProgram = glCreateProgram();
+    shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    
+    // Check for shader compilation and linking errors
+    GLint success;
+    GLchar infoLog[512];
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        MessageBoxA(NULL, infoLog, "Shader Program Linking Error", MB_OK);
+    }
+    
     glUseProgram(shaderProgram);
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    glDeleteProgram(shaderProgram);
     
     // Create texture
     glGenTextures(1, &textureID);
@@ -226,21 +240,46 @@ void ParteeWindow::setUpOGL(HWND hwnd) {
     // Initialize texture with pixel data
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 
+    // Set up vertex data for a fullscreen quad
+    float vertices[] = {
+        // positions   
+        -1.0f, -1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f,
+        -1.0f,  1.0f
+    };
+    
+    unsigned int indices[] = {
+        0, 1, 2,   // first triangle
+        2, 3, 0    // second triangle
+    };
+    
+    // Generate and bind VAO
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    
+    glBindVertexArray(VAO);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    
+    // Position attribute
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    
+    glBindVertexArray(0); // Unbind VAO
+
     // Initialize OpenGL settings
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST); // We don't need depth testing for a 2D texture
     
     // Set up viewport
     glViewport(0, 0, width, height);
-    
-    // Set up projection matrix
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f, 100.0f);
-    
-    // Switch to modelview matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 }
 
 LRESULT CALLBACK ParteeWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
