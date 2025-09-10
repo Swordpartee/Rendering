@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <GL/glew.h>  // Include GLEW first, before other OpenGL headers
 #include <GL/gl.h>
 #include <GL/glu.h>
 

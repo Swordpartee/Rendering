@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "ParteeWindow.hpp"
@@ -51,17 +52,17 @@ void ParteeWindow::render()
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, width, height, 0, -1, 1);
+    glOrtho(0, width, 0, height, -1, 1);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
 
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2i(0, 0);
-        glTexCoord2f(1, 0); glVertex2i(width, 0);
-        glTexCoord2f(1, 1); glVertex2i(width, height);
-        glTexCoord2f(0, 1); glVertex2i(0, height);
+        glTexCoord2f(-1, 1); glVertex2i(-width, -height);
+        glTexCoord2f(1, 1); glVertex2i(width, -height);
+        glTexCoord2f(1, -1); glVertex2i(width, height);
+        glTexCoord2f(0-1, -1); glVertex2i(-width, height);
     glEnd();
 
     glPopMatrix();
@@ -147,12 +148,19 @@ void ParteeWindow::setUpOGL(HWND hwnd) {
         MessageBoxW(NULL, L"Failed to create OpenGL context", L"Error", MB_OK);
         return;
     }
-
     if (!wglMakeCurrent(hdc, hrc)) {
         MessageBoxW(NULL, L"Failed to make context current", L"Error", MB_OK);
         return;
     }
+    
+    // Initialize GLEW
+    GLenum glewError = glewInit();
+    if (glewError != GLEW_OK) {
+        MessageBoxW(NULL, L"Failed to initialize GLEW", L"Error", MB_OK);
+        return;
+    }
 
+    // Create pixel data buffer (RGBA format)
     // Create pixel data buffer (RGBA format)
     pixelData = new GLubyte[width * height * 4];
 
@@ -172,6 +180,41 @@ void ParteeWindow::setUpOGL(HWND hwnd) {
         }
     }
 
+    const char* vertexShaderSource = R"(
+        #version 330 core
+        layout(location = 0) in vec2 position;
+
+        void main() {
+            gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+    )";
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    const char* fragmentShaderSource = R"(
+        #version 330 core
+        out vec4 FragColor;
+        uniform sampler2D texture1;
+
+        void main() {
+            vec2 texCoord = gl_FragCoord.xy / vec2(textureSize(texture1, 0));
+            FragColor = texture(texture1, texCoord);
+        }
+    )";
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    glDeleteProgram(shaderProgram);
+    
     // Create texture
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);

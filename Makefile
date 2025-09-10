@@ -2,8 +2,8 @@
 
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -fdiagnostics-color=always -g -std=c++17
-LDFLAGS = -lgdi32 -lopengl32 -lglu32
+CXXFLAGS = -fdiagnostics-color=always -g -std=c++17 -Iinclude
+LDFLAGS = -Llibs -lglew32 -lgdi32 -lopengl32 -lglu32
 
 # Find all .cpp files in the current directory
 SOURCES = $(wildcard *.cpp)
