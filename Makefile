@@ -2,7 +2,7 @@
 
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -fdiagnostics-color=always -g -std=c++17 -Iinclude
+CXXFLAGS = -fdiagnostics-color=always -g -std=c++17 -Iinclude -Ilibs
 LDFLAGS = -Llibs -lglew32 -lgdi32 -lopengl32 -lglu32
 
 # Directories
@@ -11,7 +11,7 @@ BUILD_DIR = build
 INCLUDE_DIR = include
 
 # Find all .cpp files in src directory
-SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/ParteeRenderer.cpp $(SRC_DIR)/ParteeWindow.cpp
+SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/ParteeRenderer.cpp $(SRC_DIR)/ParteeWindow.cpp $(SRC_DIR)/ParteeCamera.cpp $(SRC_DIR)/RenderObject.cpp $(SRC_DIR)/ParteeEngine.cpp
 
 # Target executable in build directory
 TARGET = $(BUILD_DIR)/main.exe

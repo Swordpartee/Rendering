@@ -5,48 +5,49 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "rendering/ParteeRenderer.hpp"
 #include "rendering/ParteeWindow.hpp"
+#include "rendering/ParteeCamera.hpp"
+#include "rendering/RenderObject.hpp"
 
 namespace Rendering
 {
-    ParteeRenderer::ParteeRenderer(ParteeWindow& window) : m_Window(window)
+    ParteeRenderer::ParteeRenderer(ParteeWindow& window) : m_Window(window), hrc(nullptr), 
+        m_shaderProgram(0), m_defaultTexture(0)
     {
-        initOpenGL();
     }
 
     ParteeRenderer::~ParteeRenderer()
     {
         if (hrc)
         {
-            wglMakeCurrent(m_Window.getHDC(), hrc); // Make context current for cleanup
+            wglMakeCurrent(m_Window.getHDC(), hrc);
 
             // Clean up OpenGL objects
-            if (VAO != 0)
+            if (m_shaderProgram != 0)
             {
-                glDeleteVertexArrays(1, &VAO);
+                glDeleteProgram(m_shaderProgram);
             }
-            if (VBO != 0)
+            if (m_defaultTexture != 0)
             {
-                glDeleteBuffers(1, &VBO);
-            }
-            if (textureID != 0)
-            {
-                glDeleteTextures(1, &textureID);
-            }
-            if (shaderProgram != 0)
-            {
-                glDeleteProgram(shaderProgram);
-            }
-            if (pixelData != nullptr)
-            {
-                delete[] pixelData;
+                glDeleteTextures(1, &m_defaultTexture);
             }
 
             wglMakeCurrent(NULL, NULL);
             wglDeleteContext(hrc);
         }
+    }
+
+    void ParteeRenderer::initialize()
+    {
+        initOpenGL();
+        loadShaders("assets/shaders/vertexShader.glsl", "assets/shaders/fragShader.glsl");
+        createDefaultTexture();
+        cacheUniformLocations();
     }
 
     void ParteeRenderer::initOpenGL()
@@ -103,165 +104,203 @@ namespace Rendering
             return;
         }
 
-        // Create pixel data buffer (RGBA format)
-        pixelData = new GLubyte[m_Window.getWidth() * m_Window.getHeight() * 4];
-
-        // Initialize with some pattern (example: gradient)
-        for (int y = 0; y < m_Window.getHeight(); y++)
-        {
-            for (int x = 0; x < m_Window.getWidth(); x++)
-            {
-                int index = (y * m_Window.getWidth() + x) * 4;
-                double xRatio = (double)x / (double)m_Window.getWidth();
-                double yRatio = (double)y / (double)m_Window.getHeight();
-
-                pixelData[index] = (GLubyte)(xRatio * 255);
-                pixelData[index + 1] = (GLubyte)(yRatio * 255);
-                pixelData[index + 2] = (GLubyte)((1.0 - xRatio) * 255);
-                pixelData[index + 3] = 255;
-            }
-        }
-
-        // Variables for shader compilation and linking error checking
-        GLint success;
-        GLchar infoLog[512];
-
-        // Load shaders from files
-        std::string vertexShaderSource = loadShaderFromFile("assets/shaders/vertexShader.glsl");
-        if (vertexShaderSource.empty())
-        {
-            MessageBoxA(NULL, "Failed to load vertex shader", "Error", MB_OK);
-            return;
-        }
-
-        const char* vertexShaderCStr = vertexShaderSource.c_str();
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderCStr, NULL);
-        glCompileShader(vertexShader);
-
-        // Check vertex shader compilation
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::string errorMsg = "Vertex shader compilation error:\n" + std::string(infoLog);
-            MessageBoxA(NULL, errorMsg.c_str(), "Shader Compilation Error", MB_OK);
-            return;
-        }
-
-        std::string fragmentShaderSource = loadShaderFromFile("assets/shaders/fragShader.glsl");
-        if (fragmentShaderSource.empty())
-        {
-            MessageBoxA(NULL, "Failed to load fragment shader", "Error", MB_OK);
-            return;
-        }
-
-        const char* fragmentShaderCStr = fragmentShaderSource.c_str();
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderCStr, NULL);
-        glCompileShader(fragmentShader);
-
-        // Check fragment shader compilation
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::string errorMsg = "Fragment shader compilation error:\n" + std::string(infoLog);
-            MessageBoxA(NULL, errorMsg.c_str(), "Shader Compilation Error", MB_OK);
-            return;
-        }
-
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // Check for shader compilation and linking errors
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-            MessageBoxA(NULL, infoLog, "Shader Program Linking Error", MB_OK);
-        }
-
-        glUseProgram(shaderProgram);
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        // Create texture
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-
-        // Set texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        // Initialize texture with pixel data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Window.getWidth(), m_Window.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-
-        // Set up vertex data for a fullscreen quad
-        float vertices[] = {
-            // positions
-            -1.0f, -1.0f,
-            1.0f, -1.0f,
-            1.0f, 1.0f,
-            -1.0f, 1.0f};
-
-        unsigned int indices[] = {
-            0, 1, 2, // first triangle
-            2, 3, 0  // second triangle
-        };
-
-        // Generate and bind VAO
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        GLuint EBO;
-        glGenBuffers(1, &EBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-        // Position attribute
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
-
-        glBindVertexArray(0); // Unbind VAO
-
-        // Initialize OpenGL settings
+        // Enable depth testing for 3D
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glDisable(GL_DEPTH_TEST); // We don't need depth testing for a 2D texture
 
         // Set up viewport
         glViewport(0, 0, m_Window.getWidth(), m_Window.getHeight());
     }
 
-    void ParteeRenderer::render()
+    void ParteeRenderer::renderScene(const std::vector<std::shared_ptr<RenderObject>>& objects, 
+                                    const ParteeCamera& camera)
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+        if (m_shaderProgram == 0)
+            return;
 
-        // Update texture with new pixel data
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Window.getWidth(), m_Window.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+        glUseProgram(m_shaderProgram);
 
-        // Use our shader program
-        glUseProgram(shaderProgram);
+        // Set view and projection matrices (these are the same for all objects)
+        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 projection = camera.getProjectionMatrix();
+        
+        glUniformMatrix4fv(m_viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(m_projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Bind texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+        // Render each object
+        for (const auto& object : objects)
+        {
+            if (!object)
+                continue;
 
-        // Render the fullscreen quad using modern OpenGL
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+            // Set model matrix for this object
+            glm::mat4 model = object->getModelMatrix();
+            glUniformMatrix4fv(m_modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
+            // Bind texture
+            unsigned int textureToUse = object->getTexture();
+            if (textureToUse == 0)
+                textureToUse = m_defaultTexture;
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureToUse);
+            glUniform1i(m_textureLoc, 0);
+
+            // Render the object
+            glBindVertexArray(object->getVAO());
+            glDrawElements(GL_TRIANGLES, object->getIndexCount(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
+    }
+
+    void ParteeRenderer::clear()
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    void ParteeRenderer::present()
+    {
         SwapBuffers(m_Window.getHDC());
+    }
+
+    bool ParteeRenderer::loadShaders(const std::string& vertexPath, const std::string& fragmentPath)
+    {
+        // Load shader source files
+        std::string vertexShaderSource = loadShaderFromFile(vertexPath);
+        std::string fragmentShaderSource = loadShaderFromFile(fragmentPath);
+
+        if (vertexShaderSource.empty() || fragmentShaderSource.empty())
+        {
+            return false;
+        }
+
+        // Compile shaders
+        unsigned int vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
+        unsigned int fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+
+        if (vertexShader == 0 || fragmentShader == 0)
+        {
+            return false;
+        }
+
+        // Create shader program
+        m_shaderProgram = createShaderProgram(vertexShader, fragmentShader);
+
+        // Clean up individual shaders
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+
+        return m_shaderProgram != 0;
+    }
+
+    unsigned int ParteeRenderer::createTexture(int width, int height, const void* data)
+    {
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        // Set texture parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // Upload texture data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        return texture;
+    }
+
+    void ParteeRenderer::deleteTexture(unsigned int textureID)
+    {
+        if (textureID != 0)
+        {
+            glDeleteTextures(1, &textureID);
+        }
+    }
+
+    void ParteeRenderer::cacheUniformLocations()
+    {
+        if (m_shaderProgram == 0)
+            return;
+
+        m_modelLoc = glGetUniformLocation(m_shaderProgram, "model");
+        m_viewLoc = glGetUniformLocation(m_shaderProgram, "view");
+        m_projectionLoc = glGetUniformLocation(m_shaderProgram, "projection");
+        m_textureLoc = glGetUniformLocation(m_shaderProgram, "texture1");
+    }
+
+    unsigned int ParteeRenderer::compileShader(const std::string& source, GLenum shaderType)
+    {
+        unsigned int shader = glCreateShader(shaderType);
+        const char* sourceCStr = source.c_str();
+        glShaderSource(shader, 1, &sourceCStr, NULL);
+        glCompileShader(shader);
+
+        // Check compilation status
+        GLint success;
+        GLchar infoLog[512];
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(shader, 512, NULL, infoLog);
+            std::string shaderTypeStr = (shaderType == GL_VERTEX_SHADER) ? "Vertex" : "Fragment";
+            std::string errorMsg = shaderTypeStr + " shader compilation error:\n" + std::string(infoLog);
+            MessageBoxA(NULL, errorMsg.c_str(), "Shader Compilation Error", MB_OK);
+            glDeleteShader(shader);
+            return 0;
+        }
+
+        return shader;
+    }
+
+    unsigned int ParteeRenderer::createShaderProgram(unsigned int vertexShader, unsigned int fragmentShader)
+    {
+        unsigned int program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
+        glLinkProgram(program);
+
+        // Check linking status
+        GLint success;
+        GLchar infoLog[512];
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(program, 512, NULL, infoLog);
+            std::string errorMsg = "Shader program linking error:\n" + std::string(infoLog);
+            MessageBoxA(NULL, errorMsg.c_str(), "Shader Linking Error", MB_OK);
+            glDeleteProgram(program);
+            return 0;
+        }
+
+        return program;
+    }
+
+    void ParteeRenderer::createDefaultTexture()
+    {
+        // Create a simple gradient texture for default use
+        const int width = 256;
+        const int height = 256;
+        unsigned char* data = new unsigned char[width * height * 4];
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int index = (y * width + x) * 4;
+                float xRatio = static_cast<float>(x) / static_cast<float>(width);
+                float yRatio = static_cast<float>(y) / static_cast<float>(height);
+
+                data[index] = static_cast<unsigned char>(xRatio * 255);        // Red
+                data[index + 1] = static_cast<unsigned char>(yRatio * 255);    // Green
+                data[index + 2] = static_cast<unsigned char>((1.0f - xRatio) * 255); // Blue
+                data[index + 3] = 255; // Alpha
+            }
+        }
+
+        m_defaultTexture = createTexture(width, height, data);
+        delete[] data;
     }
 
     std::string ParteeRenderer::loadShaderFromFile(const std::string& filePath)
