@@ -2,6 +2,9 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 #include "rendering/ParteeRenderer.hpp"
 #include "rendering/ParteeWindow.hpp"
@@ -119,31 +122,54 @@ namespace Rendering
             }
         }
 
-        const char *vertexShaderSource = R"(
-        #version 330 core
-        layout(location = 0) in vec2 position;
+        // Variables for shader compilation and linking error checking
+        GLint success;
+        GLchar infoLog[512];
 
-        void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
+        // Load shaders from files
+        std::string vertexShaderSource = loadShaderFromFile("assets/shaders/vertexShader.glsl");
+        if (vertexShaderSource.empty())
+        {
+            MessageBoxA(NULL, "Failed to load vertex shader", "Error", MB_OK);
+            return;
         }
-    )";
+
+        const char* vertexShaderCStr = vertexShaderSource.c_str();
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+        glShaderSource(vertexShader, 1, &vertexShaderCStr, NULL);
         glCompileShader(vertexShader);
 
-        const char *fragmentShaderSource = R"(
-        #version 330 core
-        out vec4 FragColor;
-        uniform sampler2D texture1;
-
-        void main() {
-            vec2 texCoord = gl_FragCoord.xy / vec2(textureSize(texture1, 0));
-            FragColor = texture(texture1, texCoord);
+        // Check vertex shader compilation
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+            std::string errorMsg = "Vertex shader compilation error:\n" + std::string(infoLog);
+            MessageBoxA(NULL, errorMsg.c_str(), "Shader Compilation Error", MB_OK);
+            return;
         }
-    )";
+
+        std::string fragmentShaderSource = loadShaderFromFile("assets/shaders/fragShader.glsl");
+        if (fragmentShaderSource.empty())
+        {
+            MessageBoxA(NULL, "Failed to load fragment shader", "Error", MB_OK);
+            return;
+        }
+
+        const char* fragmentShaderCStr = fragmentShaderSource.c_str();
         unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+        glShaderSource(fragmentShader, 1, &fragmentShaderCStr, NULL);
         glCompileShader(fragmentShader);
+
+        // Check fragment shader compilation
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+            std::string errorMsg = "Fragment shader compilation error:\n" + std::string(infoLog);
+            MessageBoxA(NULL, errorMsg.c_str(), "Shader Compilation Error", MB_OK);
+            return;
+        }
 
         shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
@@ -151,8 +177,6 @@ namespace Rendering
         glLinkProgram(shaderProgram);
 
         // Check for shader compilation and linking errors
-        GLint success;
-        GLchar infoLog[512];
         glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
         if (!success)
         {
@@ -238,6 +262,23 @@ namespace Rendering
         glBindVertexArray(0);
 
         SwapBuffers(m_Window.getHDC());
+    }
+
+    std::string ParteeRenderer::loadShaderFromFile(const std::string& filePath)
+    {
+        std::ifstream file(filePath);
+        if (!file.is_open())
+        {
+            std::string errorMsg = "Failed to open shader file: " + filePath;
+            MessageBoxA(NULL, errorMsg.c_str(), "Shader Loading Error", MB_OK);
+            return "";
+        }
+
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        file.close();
+        
+        return buffer.str();
     }
 
 } // namespace Rendering

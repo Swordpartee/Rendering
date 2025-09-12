@@ -3,6 +3,7 @@
 #include <windows.h>      // For HGLRC
 #include <GL/glew.h>      // For OpenGL functions and types
 #include <GL/gl.h>        // For additional GL types
+#include <string>         // For std::string
 
 namespace Rendering
 {
@@ -24,5 +25,6 @@ namespace Rendering
         GLuint shaderProgram;
         GLuint VAO, VBO;
         void initOpenGL();
+        std::string loadShaderFromFile(const std::string& filePath);
     };
 } // namespace Rendering

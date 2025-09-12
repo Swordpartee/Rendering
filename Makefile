@@ -11,7 +11,7 @@ BUILD_DIR = build
 INCLUDE_DIR = include
 
 # Find all .cpp files in src directory
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/ParteeRenderer.cpp $(SRC_DIR)/ParteeWindow.cpp
 
 # Target executable in build directory
 TARGET = $(BUILD_DIR)/main.exe
@@ -37,6 +37,6 @@ rebuild: clean all
 
 # Run the executable
 run: $(TARGET)
-	$(TARGET)
+	$(BUILD_DIR)/main.exe
 
 .PHONY: all clean rebuild run
