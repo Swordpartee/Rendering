@@ -1,19 +1,22 @@
-#include <windows.h>
-#include <GL/glew.h>  // Include GLEW first, before other OpenGL headers
-#include <GL/gl.h>
-#include <GL/glu.h>
+#pragma once
 
-namespace Windowing {
+#include <windows.h>
+#include <functional>
+
+namespace Rendering {
     class ParteeWindow 
     {
         public:
+            using RenderCallback = std::function<void()>;
+            
             ParteeWindow(int width, int height);
             ~ParteeWindow();
 
             void show();
-            void render();
+            void setRenderCallback(RenderCallback callback);
 
             HWND getHWND() const;
+            HDC getHDC() const;
             int getWidth() const;
             int getHeight() const;
 
@@ -23,16 +26,10 @@ namespace Windowing {
 
             HWND hwnd;
             HDC hdc;
-            HGLRC hrc;
+            RenderCallback m_renderCallback;
             
-            GLuint textureID;
-            GLubyte *pixelData;
-            GLuint shaderProgram;
-            GLuint VAO, VBO;
-
             static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
             void createWindow();
-            void setUpOGL(HWND hwnd);
     }; 
 }

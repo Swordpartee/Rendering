@@ -30,28 +30,6 @@
                 "isDefault": true
             },
             "detail": "Build and run using Makefile"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++.exe build all cpp files",
-            "command": "C:\\MinGW\\bin\\g++.exe",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "*.cpp",
-                "-o",
-                "main.exe",
-                "-lgdi32",
-                "-lopengl32"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "detail": "Build using wildcard to compile all .cpp files"
         }
     ],
     "version": "2.0.0"

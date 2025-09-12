@@ -1,10 +1,16 @@
 #include "ParteeWindow.hpp"
-
-using namespace Windowing;
+#include "ParteeRenderer.hpp"
 
 int main() 
 {
-    ParteeWindow window = ParteeWindow(800, 600);
+    Rendering::ParteeWindow window(800, 600);
+    Rendering::ParteeRenderer renderer(window);
+
+    window.setRenderCallback([&renderer]() {
+        renderer.render();
+    });
+
     window.show();
+
     return 0;
 }
