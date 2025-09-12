@@ -1,5 +1,5 @@
-#include "ParteeWindow.hpp"
-#include "ParteeRenderer.hpp"
+#include "rendering/ParteeWindow.hpp"
+#include "rendering/ParteeRenderer.hpp"
 
 int main() 
 {

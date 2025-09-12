@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "ParteeWindow.hpp"
+#include "rendering/ParteeWindow.hpp"
 
 namespace Rendering {
 

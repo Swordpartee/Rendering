@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+*.exe
+*.o
+*.obj
+*.lib
+*.dll.a
+
+# IDE files
+.vscode/settings.json
+.vscode/launch.json
+*.user
+*.vcxproj.filters
+*.vcxproj.user
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Compiler output
+*.pdb
+*.ilk
+*.map
+
+# Dependencies (keep libs folder but ignore specific files if needed)
+# libs/*.lib
+# libs/*.dll
+
+# Logs
+*.log

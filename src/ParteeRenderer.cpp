@@ -3,8 +3,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "ParteeRenderer.hpp"
-#include "ParteeWindow.hpp"
+#include "rendering/ParteeRenderer.hpp"
+#include "rendering/ParteeWindow.hpp"
 
 namespace Rendering
 {

@@ -5,22 +5,32 @@ CXX = g++
 CXXFLAGS = -fdiagnostics-color=always -g -std=c++17 -Iinclude
 LDFLAGS = -Llibs -lglew32 -lgdi32 -lopengl32 -lglu32
 
-# Find all .cpp files in the current directory
-SOURCES = $(wildcard *.cpp)
+# Directories
+SRC_DIR = src
+BUILD_DIR = build
+INCLUDE_DIR = include
 
-# Target executable
-TARGET = main.exe
+# Find all .cpp files in src directory
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
-# Default target - simple approach for Windows
-all: $(TARGET)
+# Target executable in build directory
+TARGET = $(BUILD_DIR)/main.exe
 
-# Link all cpp files directly (simple approach)
+# Default target
+all: $(BUILD_DIR) $(TARGET)
+
+# Create build directory if it doesn't exist
+$(BUILD_DIR):
+	if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+
+# Link all cpp files from src directory
 $(TARGET): $(SOURCES)
 	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
 
 # Clean build files
 clean:
-	-del $(TARGET)
+	if exist "$(BUILD_DIR)\*.exe" del "$(BUILD_DIR)\*.exe"
+	if exist "$(BUILD_DIR)\*.o" del "$(BUILD_DIR)\*.o"
 
 # Rebuild everything
 rebuild: clean all
