@@ -24,10 +24,25 @@ void ParteeWindow::show()
     ShowWindow(hwnd, SW_SHOW);
 
     MSG msg = {};
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (true)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        // Process all pending messages
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+                return;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        
+        // Render continuously
+        if (m_renderCallback)
+        {
+            m_renderCallback();
+        }
+        
+        // Small sleep to prevent 100% CPU usage
+        Sleep(1);
     }
 }
 
@@ -90,15 +105,6 @@ LRESULT CALLBACK ParteeWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
     {
     case WM_CREATE:
         return 0;
-    case WM_PAINT:
-    {
-        if (window && window->m_renderCallback) {
-            window->m_renderCallback();
-            ValidateRect(hwnd, NULL); // Validate immediately as we're handling the drawing
-            return 0;
-        }
-        break;
-    }
     case WM_SIZE:
         if (window) {
             // Resize OpenGL viewport
