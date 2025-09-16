@@ -21,7 +21,7 @@ namespace Rendering
 
         void initialize();
         void renderScene(const std::vector<std::shared_ptr<RenderObject>>& objects, 
-                        const ParteeCamera& camera);
+                        const ParteeCamera& camera, float totalTime = 0.0f, float deltaTime = 0.0f);
         void clear();
         void present();
 
@@ -44,6 +44,7 @@ namespace Rendering
         int m_viewLoc;
         int m_projectionLoc;
         int m_textureLoc;
+        int m_colorLoc;
 
         // Default texture for objects without textures
         unsigned int m_defaultTexture;

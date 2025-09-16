@@ -7,6 +7,24 @@
 
 namespace Rendering 
 {
+    // Forward declarations
+    class ParteeCamera;
+    
+    // Rendering context to pass shared state to objects
+    struct RenderContext 
+    {
+        unsigned int shaderProgram;
+        int modelLoc;
+        int viewLoc;
+        int projectionLoc;
+        int textureLoc;
+        int colorLoc;
+        unsigned int defaultTexture;
+        const ParteeCamera* camera;
+        float totalTime;
+        float deltaTime;
+    };
+
     struct Vertex 
     {
         glm::vec3 position;
@@ -36,6 +54,9 @@ namespace Rendering
         // Matrix getters
         glm::mat4 getModelMatrix() const;
         
+        // Rendering - virtual method for object-specific rendering
+        virtual void render(const RenderContext& context);
+        
         // Rendering data
         unsigned int getVAO() const { return m_VAO; }
         unsigned int getIndexCount() const { return m_indexCount; }
@@ -43,6 +64,10 @@ namespace Rendering
         // Material properties (for future use)
         void setTexture(unsigned int textureID) { m_textureID = textureID; }
         unsigned int getTexture() const { return m_textureID; }
+        
+        // Color properties
+        void setColor(const glm::vec3& color) { m_color = color; }
+        glm::vec3 getColor() const { return m_color; }
 
     protected:
         // Transform components
@@ -62,6 +87,7 @@ namespace Rendering
         
         // Material
         unsigned int m_textureID;
+        glm::vec3 m_color;
 
         void updateModelMatrix() const;
         void setupMesh(const std::vector<Vertex>& vertices, 
@@ -73,7 +99,17 @@ namespace Rendering
     {
     public:
         CubeObject();
+        void render(const RenderContext& context) override;
         static std::vector<Vertex> getCubeVertices();
         static std::vector<unsigned int> getCubeIndices();
+    };
+
+    class SphereObject : public RenderObject 
+    {
+    public:
+        SphereObject(int latitudeSegments = 32, int longitudeSegments = 32);
+        void render(const RenderContext& context) override;
+        static std::vector<Vertex> getSphereVertices(int latitudeSegments = 32, int longitudeSegments = 32);
+        static std::vector<unsigned int> getSphereIndices(int latitudeSegments = 32, int longitudeSegments = 32);
     };
 }

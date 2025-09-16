@@ -94,6 +94,12 @@ namespace Rendering
             if (object)
             {
                 object->rotate(deltaTime * 0.5f, glm::vec3(1.0f, 1.0f, 0.0f));
+                // Generate random direction
+                float randomX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+                float randomY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+                float randomZ = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+                glm::vec3 randomDirection(randomX, randomY, randomZ);
+                object->translate(randomDirection * deltaTime * 0.5f);
             }
         }
         
@@ -116,7 +122,7 @@ namespace Rendering
         m_renderer->clear();
         
         // Render all objects
-        m_renderer->renderScene(m_renderObjects, *m_camera);
+        m_renderer->renderScene(m_renderObjects, *m_camera, m_totalTime, m_deltaTime);
         
         // Present the frame
         m_renderer->present();

@@ -113,7 +113,7 @@ namespace Rendering
     }
 
     void ParteeRenderer::renderScene(const std::vector<std::shared_ptr<RenderObject>>& objects, 
-                                    const ParteeCamera& camera)
+                                    const ParteeCamera& camera, float totalTime, float deltaTime)
     {
         if (m_shaderProgram == 0)
             return;
@@ -127,29 +127,26 @@ namespace Rendering
         glUniformMatrix4fv(m_viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(m_projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Render each object
+        // Create render context with shared state
+        RenderContext context;
+        context.shaderProgram = m_shaderProgram;
+        context.modelLoc = m_modelLoc;
+        context.viewLoc = m_viewLoc;
+        context.projectionLoc = m_projectionLoc;
+        context.textureLoc = m_textureLoc;
+        context.colorLoc = m_colorLoc;
+        context.defaultTexture = m_defaultTexture;
+        context.camera = &camera;
+        context.totalTime = totalTime;
+        context.deltaTime = deltaTime;
+
+        // Let each object render itself
         for (const auto& object : objects)
         {
             if (!object)
                 continue;
 
-            // Set model matrix for this object
-            glm::mat4 model = object->getModelMatrix();
-            glUniformMatrix4fv(m_modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-            // Bind texture
-            unsigned int textureToUse = object->getTexture();
-            if (textureToUse == 0)
-                textureToUse = m_defaultTexture;
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureToUse);
-            glUniform1i(m_textureLoc, 0);
-
-            // Render the object
-            glBindVertexArray(object->getVAO());
-            glDrawElements(GL_TRIANGLES, object->getIndexCount(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
+            object->render(context);
         }
     }
 
@@ -228,6 +225,7 @@ namespace Rendering
         m_viewLoc = glGetUniformLocation(m_shaderProgram, "view");
         m_projectionLoc = glGetUniformLocation(m_shaderProgram, "projection");
         m_textureLoc = glGetUniformLocation(m_shaderProgram, "texture1");
+        m_colorLoc = glGetUniformLocation(m_shaderProgram, "objectColor");
     }
 
     unsigned int ParteeRenderer::compileShader(const std::string& source, GLenum shaderType)
@@ -292,9 +290,14 @@ namespace Rendering
                 float xRatio = static_cast<float>(x) / static_cast<float>(width);
                 float yRatio = static_cast<float>(y) / static_cast<float>(height);
 
-                data[index] = static_cast<unsigned char>(xRatio * 255);        // Red
-                data[index + 1] = static_cast<unsigned char>(yRatio * 255);    // Green
-                data[index + 2] = static_cast<unsigned char>((1.0f - xRatio) * 255); // Blue
+                // data[index] = static_cast<unsigned char>(xRatio * 255);        // Red
+                // data[index + 1] = static_cast<unsigned char>(yRatio * 255);    // Green
+                // data[index + 2] = static_cast<unsigned char>((1.0f - xRatio) * 255); // Blue
+                // data[index + 3] = 255; // Alpha
+
+                data[index] = 255; // Red
+                data[index + 1] = 255; // Green
+                data[index + 2] = 255; // Blue
                 data[index + 3] = 255; // Alpha
             }
         }

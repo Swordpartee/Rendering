@@ -1,7 +1,14 @@
 {
     "C_Cpp.errorSquiggles": "enabled",
     "files.associations": {
-        "functional": "cpp"
+        "functional": "cpp",
+        "memory": "cpp"
     },
-    "cmake.ignoreCMakeListsMissing": true
+    "cmake.ignoreCMakeListsMissing": true,
+    "task.autoDetect": "off",
+    "launch": {
+        "configurations": [],
+        "compounds": []
+    },
+    "debug.console.acceptSuggestionOnEnter": "off"
 }

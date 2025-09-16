@@ -142,7 +142,6 @@ namespace Rendering
         else
         {
             // For orthographic, we need to store the bounds
-            // This is a simplified version - you might want to add proper ortho bounds storage
             float halfWidth = 5.0f;
             float halfHeight = halfWidth / m_aspectRatio;
             m_projectionMatrix = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, m_nearPlane, m_farPlane);
