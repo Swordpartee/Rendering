@@ -290,15 +290,15 @@ namespace Rendering
                 float xRatio = static_cast<float>(x) / static_cast<float>(width);
                 float yRatio = static_cast<float>(y) / static_cast<float>(height);
 
-                // data[index] = static_cast<unsigned char>(xRatio * 255);        // Red
-                // data[index + 1] = static_cast<unsigned char>(yRatio * 255);    // Green
-                // data[index + 2] = static_cast<unsigned char>((1.0f - xRatio) * 255); // Blue
-                // data[index + 3] = 255; // Alpha
-
-                data[index] = 255; // Red
-                data[index + 1] = 255; // Green
-                data[index + 2] = 255; // Blue
+                data[index] = static_cast<unsigned char>(xRatio * 255);        // Red
+                data[index + 1] = static_cast<unsigned char>(yRatio * 255);    // Green
+                data[index + 2] = static_cast<unsigned char>((1.0f - xRatio) * 255); // Blue
                 data[index + 3] = 255; // Alpha
+
+                // data[index] = 255; // Red
+                // data[index + 1] = 255; // Green
+                // data[index + 2] = 255; // Blue
+                // data[index + 3] = 255; // Alpha
             }
         }
 

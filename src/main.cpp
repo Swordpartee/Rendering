@@ -26,7 +26,7 @@ int main()
     // Create objects procedurally - just cubes with different colors for now
     for (int i = 0; i < 1000; ++i)
     {
-        auto sphere = std::make_shared<Rendering::CubeObject>();
+        auto sphere = std::make_shared<Rendering::SphereObject>();
 
         // Give each sphere a different color based on its index
         float r = (float)(i % 255) / 255.0f;

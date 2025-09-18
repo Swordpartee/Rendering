@@ -56,6 +56,7 @@ namespace Rendering
         
         // Rendering - virtual method for object-specific rendering
         virtual void render(const RenderContext& context);
+        virtual void update(float deltaTime);
         
         // Rendering data
         unsigned int getVAO() const { return m_VAO; }

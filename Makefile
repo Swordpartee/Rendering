@@ -11,7 +11,7 @@ BUILD_DIR = build
 INCLUDE_DIR = include
 
 # Find all .cpp files in src directory
-SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/ParteeRenderer.cpp $(SRC_DIR)/ParteeWindow.cpp $(SRC_DIR)/ParteeCamera.cpp $(SRC_DIR)/RenderObject.cpp $(SRC_DIR)/ParteeEngine.cpp
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/**/*.cpp)
 
 # Target executable in build directory
 TARGET = $(BUILD_DIR)/main.exe
