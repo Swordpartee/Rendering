@@ -87,21 +87,26 @@ namespace Rendering
     {
         // Update total time
         m_totalTime += deltaTime;
+
+        for (auto& object : m_renderObjects) {
+            object->updatePhysics(deltaTime);
+            // object->update(deltaTime);
+        }
         
         // Example: Rotate all objects slightly
-        for (auto& object : m_renderObjects)
-        {
-            if (object)
-            {
-                object->rotate(deltaTime * 0.5f, glm::vec3(1.0f, 1.0f, 0.0f));
-                // Generate random direction
-                float randomX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
-                float randomY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
-                float randomZ = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
-                glm::vec3 randomDirection(randomX, randomY, randomZ);
-                object->translate(randomDirection * deltaTime * 0.5f);
-            }
-        }
+        // for (auto& object : m_renderObjects)
+        // {
+        //     if (object)
+        //     {
+        //         object->rotate(deltaTime * 0.5f, glm::vec3(1.0f, 1.0f, 0.0f));
+        //         // Generate random direction
+        //         float randomX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+        //         float randomY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+        //         float randomZ = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f;
+        //         glm::vec3 randomDirection(randomX, randomY, randomZ);
+        //         object->translate(randomDirection * deltaTime * 0.5f);
+        //     }
+        // }
         
         // Here you could add:
         // - Input handling

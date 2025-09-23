@@ -39,6 +39,28 @@ namespace Rendering
         m_transformDirty = true;
     }
 
+    void RenderObject::setLinearVelocity(const glm::vec3 &linearVelocity)
+    {
+        m_linearVelocity = linearVelocity;
+    }
+
+    void RenderObject::setAngularVelocity(const glm::vec3 &angularVelocity)
+    {
+        m_angularVelocity = angularVelocity;
+    }
+
+    void RenderObject::applyLinearForce(const glm::vec3 &linearImpulse)
+    {
+        m_linearVelocity += linearImpulse;
+        m_transformDirty = true; // Mark transform as dirty to update position
+    }
+
+    void RenderObject::applyAngulerForce(const glm::vec3 &angularImpulse)
+    {
+        m_angularVelocity += angularImpulse;
+        m_transformDirty = true; // Mark transform as dirty to update rotation
+    }
+
     void RenderObject::translate(const glm::vec3& translation)
     {
         m_position += translation;
@@ -57,7 +79,19 @@ namespace Rendering
 
     void RenderObject::scale(const glm::vec3& scale)
     {
-m_scale *= scale;
+        m_scale *= scale;
+        m_transformDirty = true;
+    }
+
+    void RenderObject::updatePhysics(float deltaTime)
+    {
+        // Update position based on linear velocity
+        m_position += m_linearVelocity * deltaTime;
+
+        // Update rotation based on angular velocity
+        m_rotation += m_angularVelocity * deltaTime;
+
+        // Mark transform as dirty to update model matrix
         m_transformDirty = true;
     }
 
@@ -113,14 +147,7 @@ m_scale *= scale;
         glBindVertexArray(0);
     }
 
-    void RenderObject::update(float deltaTime)
-    {
-        // Default update implementation - can be overridden by derived classes
-        // Base objects don't need to do anything by default
-    }
-
-    void RenderObject::setupMesh(const std::vector<Vertex>& vertices, 
-                                const std::vector<unsigned int>& indices)
+    void RenderObject::setupMesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
     {
         m_indexCount = indices.size();
 

@@ -5,10 +5,10 @@
         "memory": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true,
-    "task.autoDetect": "off",
     "launch": {
         "configurations": [],
         "compounds": []
     },
-    "debug.console.acceptSuggestionOnEnter": "off"
+    "typescript.suggest.autoImports": false,
+    "editor.codeLens": false
 }

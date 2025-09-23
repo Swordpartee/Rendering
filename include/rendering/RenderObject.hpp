@@ -46,8 +46,13 @@ namespace Rendering
         void setPosition(const glm::vec3& position);
         void setRotation(const glm::vec3& rotation);
         void setScale(const glm::vec3& scale);
-        
-        void translate(const glm::vec3& translation);
+        void setLinearVelocity(const glm::vec3 &linearVelocity);
+        void setAngularVelocity(const glm::vec3 &angularVelocity);
+
+        void applyLinearForce(const glm::vec3 &linearImpulse);
+        void applyAngulerForce(const glm::vec3 &angularImpulse);
+
+        void translate(const glm::vec3 &translation);
         void rotate(float angle, const glm::vec3& axis);
         void scale(const glm::vec3& scale);
 
@@ -56,8 +61,10 @@ namespace Rendering
         
         // Rendering - virtual method for object-specific rendering
         virtual void render(const RenderContext& context);
-        virtual void update(float deltaTime);
-        
+        void update(float deltaTime);
+
+        void updatePhysics(float deltaTime);
+
         // Rendering data
         unsigned int getVAO() const { return m_VAO; }
         unsigned int getIndexCount() const { return m_indexCount; }
@@ -75,7 +82,9 @@ namespace Rendering
         glm::vec3 m_position;
         glm::vec3 m_rotation;
         glm::vec3 m_scale;
-        
+        glm::vec3 m_linearVelocity;
+        glm::vec3 m_angularVelocity;
+
         // Cached model matrix
         mutable glm::mat4 m_modelMatrix;
         mutable bool m_transformDirty;

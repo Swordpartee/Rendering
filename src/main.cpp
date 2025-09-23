@@ -22,11 +22,13 @@ int main()
     std::uniform_real_distribution<float> scaleDist(0.1f, 2.0f);
     std::uniform_real_distribution<float> rotationDist(-3.14159f, 3.14159f);
     std::uniform_real_distribution<float> colorDist(0.2f, 1.0f);  // For random colors
+    std::uniform_real_distribution<float> linearVelocityDist(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> angularVelocityDist(-1.0f, 1.0f);
 
     // Create objects procedurally - just cubes with different colors for now
     for (int i = 0; i < 1000; ++i)
     {
-        auto sphere = std::make_shared<Rendering::SphereObject>();
+        auto sphere = std::make_shared<Rendering::CubeObject>();
 
         // Give each sphere a different color based on its index
         float r = (float)(i % 255) / 255.0f;
@@ -49,6 +51,20 @@ int main()
             rotationDist(gen)
         );
         sphere->setRotation(rotation);
+
+        glm::vec3 linearVelocity(
+            linearVelocityDist(gen) * 0.1f,
+            linearVelocityDist(gen) * 0.1f,
+            linearVelocityDist(gen) * 0.1f
+        );
+        sphere->setLinearVelocity(linearVelocity);
+
+        glm::vec3 angularVelocity(
+            angularVelocityDist(gen) * 1.0f,
+            angularVelocityDist(gen) * 1.0f,
+            angularVelocityDist(gen) * 1.0f
+        );
+        sphere->setAngularVelocity(angularVelocity);
 
         // Random scale between 0.1 and 2.0
         float scale = scaleDist(gen);
