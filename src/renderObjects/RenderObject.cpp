@@ -147,6 +147,13 @@ namespace Rendering
         glBindVertexArray(0);
     }
 
+    void RenderObject::update(float deltaTime)
+    {
+        // Default update implementation - can be overridden by derived classes
+        // Update physics if object has velocity
+        updatePhysics(deltaTime);
+    }
+
     void RenderObject::setupMesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
     {
         m_indexCount = indices.size();

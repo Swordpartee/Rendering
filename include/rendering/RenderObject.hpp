@@ -122,4 +122,32 @@ namespace Rendering
         static std::vector<Vertex> getSphereVertices(int latitudeSegments = 32, int longitudeSegments = 32);
         static std::vector<unsigned int> getSphereIndices(int latitudeSegments = 32, int longitudeSegments = 32);
     };
+
+    class ObjObject : public RenderObject 
+    {
+    public:
+        ObjObject(const std::string& objFilePath);
+        ObjObject(const std::string& objFilePath, unsigned int textureID);
+        
+        static std::vector<Vertex> loadObjVertices(const std::string& filePath);
+        static std::vector<unsigned int> loadObjIndices(const std::string& filePath);
+        
+    private:
+        std::string m_objFilePath;
+        
+        // Helper functions for parsing OBJ format
+        static void parseVertex(const std::string& line, std::vector<glm::vec3>& positions);
+        static void parseTexCoord(const std::string& line, std::vector<glm::vec2>& texCoords);
+        static void parseNormal(const std::string& line, std::vector<glm::vec3>& normals);
+        static void parseFace(const std::string& line, 
+                             const std::vector<glm::vec3>& positions,
+                             const std::vector<glm::vec2>& texCoords,
+                             const std::vector<glm::vec3>& normals,
+                             std::vector<Vertex>& vertices,
+                             std::vector<unsigned int>& indices);
+        static std::vector<int> parseVertexData(const std::string& vertexData);
+        static unsigned int findOrAddVertex(const Vertex& vertex, std::vector<Vertex>& vertices);
+        static bool verticesEqual(const Vertex& a, const Vertex& b);
+        static void calculateNormals(std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
+    };
 }
