@@ -26,16 +26,17 @@ int main()
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> positionDist(-50.0f, 50.0f);
-    std::uniform_real_distribution<float> scaleDist(0.01f, 0.1f);
+    std::uniform_real_distribution<float> scaleDist(1.0f, 10.0f);
     std::uniform_real_distribution<float> rotationDist(-3.14159f, 3.14159f);
     std::uniform_real_distribution<float> colorDist(0.2f, 1.0f);  // For random colors
     std::uniform_real_distribution<float> linearVelocityDist(-1.0f, 1.0f);
     std::uniform_real_distribution<float> angularVelocityDist(-1.0f, 1.0f);
 
-    // Create objects procedurally - just cubes with different colors for now
-    for (int i = 0; i < 10000; ++i)
+    // Create objects procedurally - spheres with collision detection
+    for (int i = 0; i < 50; ++i)  // Reduced count for better performance
     {
-        auto sphere = std::make_shared<Rendering::ObjObject>(*pyramid);
+        float radius = scaleDist(gen) * 10.0f; // Random radius between 0.1 and 1.0
+        auto sphere = std::make_shared<Rendering::SphereObject>(16, 16, radius);
 
         // Give each sphere a different color based on its index
         float r = (float)(i % 255) / 255.0f;

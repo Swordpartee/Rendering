@@ -1,6 +1,13 @@
 #include "rendering/ParteeEngine.hpp"
+#include "rendering/ParteeWindow.hpp"
+#include "rendering/ParteeRenderer.hpp"
+#include "rendering/ParteeCamera.hpp"
+#include "rendering/RenderObject.hpp"
 #include <algorithm>
 #include <iostream>
+#include <typeinfo>
+#include <chrono>
+#include <memory>
 
 namespace Rendering 
 {
@@ -90,8 +97,11 @@ namespace Rendering
 
         for (auto& object : m_renderObjects) {
             object->updatePhysics(deltaTime);
-            // object->update(deltaTime);
+            object->update(deltaTime);
         }
+        
+        // Check collisions between all spheres
+        checkCollisions();
         
         // Example: Rotate all objects slightly
         // for (auto& object : m_renderObjects)
@@ -113,6 +123,7 @@ namespace Rendering
         // - Physics updates
         // - Animation updates
         // - Game logic
+
     }
 
     void ParteeEngine::render()
@@ -144,6 +155,34 @@ namespace Rendering
         if (m_deltaTime > 0.1f)
         {
             m_deltaTime = 0.016f; // ~60 FPS
+        }
+    }
+
+    void ParteeEngine::checkCollisions()
+    {
+        // First, reset all sphere collision states to false
+        for (auto& object : m_renderObjects) {
+            SphereObject* sphere = dynamic_cast<SphereObject*>(object.get());
+            if (sphere) {
+                sphere->setColliding(false);
+            }
+        }
+        
+        // Check collision between all pairs of spheres
+        for (size_t i = 0; i < m_renderObjects.size(); ++i) {
+            SphereObject* sphere1 = dynamic_cast<SphereObject*>(m_renderObjects[i].get());
+            if (!sphere1) continue;
+            
+            for (size_t j = i + 1; j < m_renderObjects.size(); ++j) {
+                SphereObject* sphere2 = dynamic_cast<SphereObject*>(m_renderObjects[j].get());
+                if (!sphere2) continue;
+                
+                // Check if spheres are colliding
+                if (sphere1->getCollider().isColliding(sphere2->getCollider())) {
+                    sphere1->setColliding(true);
+                    sphere2->setColliding(true);
+                }
+            }
         }
     }
 }

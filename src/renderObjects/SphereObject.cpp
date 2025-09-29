@@ -8,10 +8,15 @@
 using namespace Rendering;
 
 // SphereObject implementation
-SphereObject::SphereObject(int latitudeSegments, int longitudeSegments)
+SphereObject::SphereObject(int latitudeSegments, int longitudeSegments, float radius)
     : RenderObject(getSphereVertices(latitudeSegments, longitudeSegments),
-                   getSphereIndices(latitudeSegments, longitudeSegments))
+                   getSphereIndices(latitudeSegments, longitudeSegments)),
+      m_collider(glm::vec3(0.0f), radius),
+      m_sphereRadius(radius),
+      m_isColliding(false)
 {
+    setColor(glm::vec3(0.0f, 1.0f, 0.0f)); // Default green color
+    setScale(glm::vec3(radius)); // Scale the sphere to match the radius
 }
 
 std::vector<Vertex> SphereObject::getSphereVertices(int latitudeSegments, int longitudeSegments)
@@ -75,22 +80,15 @@ std::vector<unsigned int> SphereObject::getSphereIndices(int latitudeSegments, i
 // SphereObject specific rendering
 void SphereObject::render(const RenderContext &context)
 {
-    // Spheres use standard rendering but with pulsing effect
-    glm::vec3 baseColor = getColor();
-
-    // Create unique phase offset based on object's position to avoid synchronization
-    float phaseOffset = (getModelMatrix()[3][0] + getModelMatrix()[3][1] + getModelMatrix()[3][2]) * 0.1f;
-
-    // Add time-based pulsing effect using proper time from context
-    float pulse = 0.8f + 0.2f * sin(context.totalTime * 2.0f + phaseOffset);
-    glm::vec3 pulsingColor = baseColor * pulse;
+    // Use collision-based color (red when colliding, green when not)
+    glm::vec3 color = getColor();
 
     // Set model matrix
     glm::mat4 model = getModelMatrix();
     glUniformMatrix4fv(context.modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-    // Set pulsing color
-    glUniform3fv(context.colorLoc, 1, glm::value_ptr(pulsingColor));
+    // Set collision-based color
+    glUniform3fv(context.colorLoc, 1, glm::value_ptr(color));
 
     // Bind texture
     unsigned int textureToUse = getTexture();
@@ -105,4 +103,30 @@ void SphereObject::render(const RenderContext &context)
     glBindVertexArray(getVAO());
     glDrawElements(GL_TRIANGLES, getIndexCount(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+}
+
+void SphereObject::update(float deltaTime)
+{
+    // Call parent update first
+    RenderObject::update(deltaTime);
+    
+    // Update collider position to match render object position
+    updateColliderPosition();
+}
+
+void SphereObject::updateColliderPosition()
+{
+    m_collider.setPosition(m_position);
+}
+
+void SphereObject::setColliding(bool isColliding)
+{
+    m_isColliding = isColliding;
+    
+    // Set color based on collision state
+    if (isColliding) {
+        setColor(glm::vec3(1.0f, 0.0f, 0.0f)); // Red when colliding
+    } else {
+        setColor(glm::vec3(0.0f, 1.0f, 0.0f)); // Green when not colliding
+    }
 }

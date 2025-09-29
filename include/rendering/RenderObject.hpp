@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <string>
+#include "Collider.hpp"
 
 namespace Rendering 
 {
@@ -61,7 +62,7 @@ namespace Rendering
         
         // Rendering - virtual method for object-specific rendering
         virtual void render(const RenderContext& context);
-        void update(float deltaTime);
+        virtual void update(float deltaTime);
 
         void updatePhysics(float deltaTime);
 
@@ -117,10 +118,25 @@ namespace Rendering
     class SphereObject : public RenderObject 
     {
     public:
-        SphereObject(int latitudeSegments = 32, int longitudeSegments = 32);
+        SphereObject(int latitudeSegments = 32, int longitudeSegments = 32, float radius = 1.0f);
         void render(const RenderContext& context) override;
+        void update(float deltaTime) override;
+        
+        // Collision methods
+        SphereCollider& getCollider() { return m_collider; }
+        const SphereCollider& getCollider() const { return m_collider; }
+        void updateColliderPosition();
+        
+        // Color management for collision indication
+        void setColliding(bool isColliding);
+        
         static std::vector<Vertex> getSphereVertices(int latitudeSegments = 32, int longitudeSegments = 32);
         static std::vector<unsigned int> getSphereIndices(int latitudeSegments = 32, int longitudeSegments = 32);
+        
+    private:
+        SphereCollider m_collider;
+        float m_sphereRadius;
+        bool m_isColliding;
     };
 
     class ObjObject : public RenderObject 

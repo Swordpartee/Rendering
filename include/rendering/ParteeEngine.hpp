@@ -24,6 +24,9 @@ namespace Rendering
         // Object management
         void addRenderObject(std::shared_ptr<RenderObject> object);
         void removeRenderObject(std::shared_ptr<RenderObject> object);
+        
+        // Collision detection
+        void checkCollisions();
 
         // Camera access
         ParteeCamera& getCamera() { return *m_camera; }
