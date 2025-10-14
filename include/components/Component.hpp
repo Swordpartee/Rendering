@@ -11,16 +11,13 @@ namespace ParteeEngine {
     class Component {
         public:
             virtual ~Component() = default;
-            virtual void onAttach(Entity &owner) { owner_ = &owner; }
+            virtual void onAttach(Entity &owner) {}
 
             virtual void requireDependencies(Entity&) {}
 
             virtual std::vector<std::type_index> getUpdateDependencies() const { return {}; }
 
-            virtual void update(float dt) {}
+            virtual void update(Entity& owner, float dt) {}
             virtual void onEvent(const Event&) {}
-
-        protected:
-            Entity *owner_ = nullptr;
     };
 } // namespace ParteeEngine

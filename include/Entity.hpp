@@ -49,6 +49,14 @@ namespace ParteeEngine {
             template<typename T>
             bool hasComponent();
 
+            std::vector<Component*> getComponents() const {
+                std::vector<Component*> comps;
+                for (const auto& pair : components_) {
+                    comps.push_back(pair.second.get());
+                }
+                return comps;
+            }
+
             void update(float dt);
 
         private:

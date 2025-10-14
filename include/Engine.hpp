@@ -5,13 +5,14 @@
 #include "entity.hpp"
 
 namespace ParteeEngine {
-    class Window; 
+    class Window;
+    class Renderer; 
 
     class Engine {
 
         public:
             Engine(int width, int height);
-            ~Engine() = default;
+            ~Engine();
 
             void start();
 
@@ -24,6 +25,7 @@ namespace ParteeEngine {
             void update();
 
             Window* window;
+            Renderer* renderer;
 
             std::vector<Entity> entities;
     };

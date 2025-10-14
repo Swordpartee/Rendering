@@ -7,6 +7,7 @@
 namespace ParteeEngine {
     class Entity; // Forward declaration
     class TransformComponent; // Forward declaration
+    class Renderer; // Forward declaration
     
     class RenderComponent : public Component {
         public:
@@ -14,6 +15,12 @@ namespace ParteeEngine {
 
             std::vector<std::type_index> getUpdateDependencies() const override;
 
-            void render();
+            void update(Entity& owner, float dt) override;
+
+            void render(Entity& owner, Renderer& renderer);
+
+            // Rendering properties
+            bool visible = true;
+            enum RenderType { SQUARE, CUBE } type = SQUARE;
     };
 }

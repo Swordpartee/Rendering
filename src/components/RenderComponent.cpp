@@ -1,19 +1,45 @@
 #include "components/RenderComponent.hpp"
+
 #include "components/TransformComponent.hpp"
+#include "Renderer.hpp"
 #include "Entity.hpp"
 
 namespace ParteeEngine {
-    void RenderComponent::requireDependencies(Entity &owner) {
-        if (!owner.hasComponent<TransformComponent>()) {
+    void RenderComponent::requireDependencies(Entity &owner) 
+    {
+        if (!owner.hasComponent<TransformComponent>()) 
+        {
             owner.addComponent<TransformComponent>();
         }
     }
 
-    std::vector<std::type_index> RenderComponent::getUpdateDependencies() const {
+    std::vector<std::type_index> RenderComponent::getUpdateDependencies() const 
+    {
         return {typeid(TransformComponent)};
     }
 
-    void RenderComponent::render() {
-        // Rendering code will go here
+    void RenderComponent::update(Entity& owner, float dt)
+    {
+        // Update logic here if needed
+    }
+
+    void RenderComponent::render(Entity& owner, Renderer& renderer) 
+    {
+        if (!visible) return;
+        
+        auto transform = owner.getComponent<TransformComponent>();
+        if (!transform) return;
+        
+        const Vector3& pos = transform->getPosition();
+        
+        // Use high-level renderer API
+        switch (type) {
+            case SQUARE:
+                renderer.drawSquare(pos, 1.0f);
+                break;
+            case CUBE:
+                renderer.drawCube(pos, Vector3(1.0f, 1.0f, 1.0f));
+                break;
+        }
     }
 }

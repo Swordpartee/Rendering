@@ -7,7 +7,23 @@ namespace ParteeEngine
         createWindow();
     };
 
-    Window::~Window() {}
+    Window::~Window() {
+        // Clean up OpenGL context
+        if (hglrc) {
+            wglMakeCurrent(NULL, NULL);
+            wglDeleteContext(hglrc);
+        }
+        
+        // Release device context
+        if (hdc && hwnd) {
+            ReleaseDC(hwnd, hdc);
+        }
+        
+        // Destroy window
+        if (hwnd) {
+            DestroyWindow(hwnd);
+        }
+    }
 
     int Window::getHeight() const { return height; }
     int Window::getWidth() const { return width; }
@@ -33,10 +49,11 @@ namespace ParteeEngine
             if (renderCallback)
             {
                 renderCallback();
+                swapBuffers();
             }
 
             // Small sleep to prevent 100% CPU usage
-            Sleep(1);
+            Sleep(16); // ~60 FPS
         }
     }
 
@@ -71,6 +88,54 @@ namespace ParteeEngine
 
         // Get device context for OpenGL
         hdc = GetDC(hwnd);
+        
+        // Set up OpenGL
+        setupOpenGL();
+    }
+
+    void Window::setupOpenGL() {
+        // Set up pixel format for OpenGL
+        PIXELFORMATDESCRIPTOR pfd = {};
+        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 24;
+        pfd.cStencilBits = 8;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+
+        int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+        if (pixelFormat == 0) {
+            // Handle error
+            return;
+        }
+
+        if (!SetPixelFormat(hdc, pixelFormat, &pfd)) {
+            // Handle error
+            return;
+        }
+
+        // Create OpenGL rendering context
+        hglrc = wglCreateContext(hdc);
+        if (hglrc == NULL) {
+            // Handle error
+            return;
+        }
+
+        // Make the context current
+        if (!wglMakeCurrent(hdc, hglrc)) {
+            // Handle error
+            return;
+        }
+
+        // Set up basic OpenGL state
+        glViewport(0, 0, width, height);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        
+        // Set clear color to dark blue
+        glClearColor(0.0f, 0.1f, 0.2f, 1.0f);
     }
 
     LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -116,5 +181,9 @@ namespace ParteeEngine
         }
 
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+
+    void Window::swapBuffers() {
+        SwapBuffers(hdc);
     }
 } // namespace ParteeEngine

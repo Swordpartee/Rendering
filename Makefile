@@ -3,7 +3,7 @@
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -fdiagnostics-color=always -g -std=c++17 -Iinclude -Ilibs
-LDFLAGS = 
+LDFLAGS = -lopengl32 -lgdi32 
 
 # Directories
 SRC_DIR = src

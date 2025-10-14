@@ -3,11 +3,13 @@
 namespace ParteeEngine {
 
     void Entity::update(float dt) {
-        if (componentsDirty)
+        if (componentsDirty) {
             sortComponents();
+            componentsDirty = false;
+        }
 
         for (auto it = sortedComponents_.begin(); it != sortedComponents_.end(); ++it) {
-            (*it)->update(dt);
+            (*it)->update(*this, dt);
         }
     }
 

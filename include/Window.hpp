@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <functional>
+#include <GL/gl.h>
 
 namespace ParteeEngine {
     class Window {
@@ -13,6 +14,7 @@ namespace ParteeEngine {
 
             void show();
             void setRenderCallback(RenderCallback callback);
+            void swapBuffers();
 
             HWND getHWND() const;
             HDC getHDC() const;
@@ -25,11 +27,13 @@ namespace ParteeEngine {
 
             HWND hwnd;
             HDC hdc;
+            HGLRC hglrc; // OpenGL rendering context
             RenderCallback renderCallback;
 
             static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
             void createWindow();
+            void setupOpenGL();
     };
 
 } // namespace ParteeEngine
