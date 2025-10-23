@@ -1,6 +1,9 @@
+#pragma once
+
 #include "Vector3.hpp"
 #include "Component.hpp"
 #include "components/PhysicsComponent.hpp"
+#include "components/ColliderComponent.hpp"
 
 namespace ParteeEngine {
     struct TransformComponent : public Component {
@@ -90,7 +93,7 @@ namespace ParteeEngine {
 
         std::vector<std::type_index> getUpdateDependencies() const
         {
-            return {typeid(PhysicsComponent)};
+            return {typeid(PhysicsComponent), typeid(ColliderComponent)};
         }
 
         void update(Entity& owner, float dt) override {

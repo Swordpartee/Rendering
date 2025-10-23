@@ -2,6 +2,7 @@
 
 #include "Component.hpp"
 #include "Vector3.hpp"
+#include "events/Event.hpp"
 #include <iostream>
 #include <typeindex>
 
@@ -23,6 +24,8 @@ namespace ParteeEngine
             void applyImpulse(const Vector3 &impulse);
 
             void resetAcceleration();
+
+            void onCollide(CollisionEvent e);
 
             PhysicsComponent() : velocity(0.0f, 0.0f, 0.0f), acceleration(0.0f, 0.0f, 0.0f) {}
 

@@ -2,6 +2,15 @@
 
 namespace ParteeEngine {
 
+    // Provide move constructor and move assignment
+    Entity::Entity(Entity &&other) noexcept
+        : componentsDirty(other.componentsDirty),
+          components_(std::move(other.components_)),
+          sortedComponents_(std::move(other.sortedComponents_))
+    {
+        other.componentsDirty = true;
+    }
+
     void Entity::update(float dt) {
         if (componentsDirty) {
             sortComponents();
@@ -44,9 +53,30 @@ namespace ParteeEngine {
         }
     }
 
+    Entity& Entity::operator=(Entity &&other) noexcept
+    {
+        if (this != &other)
+        {
+            componentsDirty = other.componentsDirty;
+            components_ = std::move(other.components_);
+            sortedComponents_ = std::move(other.sortedComponents_);
+            other.componentsDirty = true;
+        }
+        return *this;
+    };
+
     Component* Entity::getComponentByType(std::type_index type) {
         auto it = components_.find(type);
         return it != components_.end() ? it->second.get() : nullptr;
     }
 
+    std::vector<Component *> Entity::getComponents() const
+    {
+        std::vector<Component *> comps;
+        for (const auto &pair : components_)
+        {
+            comps.push_back(pair.second.get());
+        }
+        return comps;
+    };
 }

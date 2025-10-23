@@ -20,26 +20,12 @@ namespace ParteeEngine {
             // Delete copy constructor and copy assignment
             Entity(const Entity&) = delete;
             Entity& operator=(const Entity&) = delete;
-            
+
             // Provide move constructor and move assignment
-            Entity(Entity&& other) noexcept 
-                : componentsDirty(other.componentsDirty),
-                  components_(std::move(other.components_)),
-                  sortedComponents_(std::move(other.sortedComponents_)) 
-            {
-                other.componentsDirty = true;
-            }
-            
-            Entity& operator=(Entity&& other) noexcept {
-                if (this != &other) {
-                    componentsDirty = other.componentsDirty;
-                    components_ = std::move(other.components_);
-                    sortedComponents_ = std::move(other.sortedComponents_);
-                    other.componentsDirty = true;
-                }
-                return *this;
-            }
-            
+            Entity(Entity &&other) noexcept;
+
+            Entity &operator=(Entity &&other) noexcept;
+
             template <typename T, typename... Args>
             T &addComponent(Args &&...args);
 
@@ -49,13 +35,10 @@ namespace ParteeEngine {
             template<typename T>
             bool hasComponent();
 
-            std::vector<Component*> getComponents() const {
-                std::vector<Component*> comps;
-                for (const auto& pair : components_) {
-                    comps.push_back(pair.second.get());
-                }
-                return comps;
-            }
+            template <typename T>
+            void ensureComponent();
+
+            std::vector<Component*> getComponents() const;
 
             void update(float dt);
 
@@ -74,8 +57,10 @@ namespace ParteeEngine {
     {
         // get the component type
         auto type = std::type_index(typeid(T));
-        if (components_.count(type))
-            throw std::runtime_error("Component Already Exists");
+        // check if component already exists
+        if (components_.find(type) != components_.end()) {
+            throw std::runtime_error("Component already exists on this entity");
+        }
 
         // create the component
         auto component = std::make_unique<T>(std::forward<Args>(args)...);
@@ -102,5 +87,14 @@ namespace ParteeEngine {
     bool Entity::hasComponent()
     {
         return components_.count(std::type_index(typeid(T))) > 0;
+    }
+
+    template <typename T>
+    void Entity::ensureComponent() 
+    {
+        if (!hasComponent<T>()) 
+        {
+            addComponent<T>();
+        }
     }
 }

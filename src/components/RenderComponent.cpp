@@ -1,16 +1,15 @@
 #include "components/RenderComponent.hpp"
 
 #include "components/TransformComponent.hpp"
+#include "components/ColliderComponent.hpp"
+#include "events/EventBus.hpp"
 #include "Renderer.hpp"
 #include "Entity.hpp"
 
 namespace ParteeEngine {
     void RenderComponent::requireDependencies(Entity &owner) 
     {
-        if (!owner.hasComponent<TransformComponent>()) 
-        {
-            owner.addComponent<TransformComponent>();
-        }
+        owner.ensureComponent<TransformComponent>();
     }
 
     std::vector<std::type_index> RenderComponent::getUpdateDependencies() const 

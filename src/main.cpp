@@ -3,6 +3,7 @@
 #include "components/RenderComponent.hpp"
 #include "components/PhysicsComponent.hpp"
 #include "components/TransformComponent.hpp"
+#include "events/EventBus.hpp"
 #include <utility>
 
 int main() 
