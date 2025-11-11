@@ -15,9 +15,6 @@ namespace ParteeEngine {
 
             virtual void requireDependencies(Entity&) {}
 
-            virtual std::vector<std::type_index> getUpdateDependencies() const { return {}; }
-
             virtual void update(Entity& owner, float dt) {}
-            virtual void onEvent(const Event&) {}
     };
 } // namespace ParteeEngine

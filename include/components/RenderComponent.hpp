@@ -13,9 +13,7 @@ namespace ParteeEngine {
         public:
             void requireDependencies(Entity &owner) override;
 
-            std::vector<std::type_index> getUpdateDependencies() const override;
-
-            void update(Entity& owner, float dt) override;
+            void update(Entity& owner, float dt) override {};
 
             void render(Entity& owner, Renderer& renderer);
 

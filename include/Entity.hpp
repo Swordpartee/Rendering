@@ -14,18 +14,8 @@ namespace ParteeEngine {
     class Entity {
 
         public:
-            // Default constructor
-            Entity() = default;
+            Entity(int id);
             
-            // Delete copy constructor and copy assignment
-            Entity(const Entity&) = delete;
-            Entity& operator=(const Entity&) = delete;
-
-            // Provide move constructor and move assignment
-            Entity(Entity &&other) noexcept;
-
-            Entity &operator=(Entity &&other) noexcept;
-
             template <typename T, typename... Args>
             T &addComponent(Args &&...args);
 
@@ -38,17 +28,20 @@ namespace ParteeEngine {
             template <typename T>
             void ensureComponent();
 
+            template <typename T>
+            void updateComponent(float dt);
+
             std::vector<Component*> getComponents() const;
 
             void update(float dt);
 
+            int getID() const;
+
         private:
-            bool componentsDirty = true;
+            int id = -1;
 
             std::unordered_map<std::type_index, std::unique_ptr<Component>> components_;
-            std::vector<Component*> sortedComponents_;
 
-            void sortComponents();
             Component* getComponentByType(std::type_index type);
     };
 
@@ -70,8 +63,6 @@ namespace ParteeEngine {
         // add the component
         T& ref = *component;
         components_[type] = std::move(component);
-
-        componentsDirty = true;
 
         return ref;
     }
@@ -96,5 +87,13 @@ namespace ParteeEngine {
         {
             addComponent<T>();
         }
+    }
+
+    template <typename T>
+    void Entity::updateComponent(float dt)
+    {
+        auto *comp = getComponent<T>();
+        if (comp)
+            comp->update(*this, dt);
     }
 }

@@ -3,6 +3,8 @@
 #include "Renderer.hpp"
 #include "Vector3.hpp"
 #include "components/RenderComponent.hpp"
+#include "components/PhysicsComponent.hpp"
+#include "components/ColliderComponent.hpp"
 
 namespace ParteeEngine {
 
@@ -19,15 +21,15 @@ namespace ParteeEngine {
             
             // Clear the screen
             renderer->clear();
-            
+
+            for (Entity &e : entities) { e.updateComponent<PhysicsComponent>(0.0016f); }
+
+            for (Entity &e : entities) { e.updateComponent<ColliderComponent>(0.0016f); }
+
             // Update and render entities
             for (Entity& e : entities) {
-                e.update(0.0016f);
-
                 auto renderComp = e.getComponent<RenderComponent>();
-                if (renderComp != nullptr) {
-                    renderComp->render(e, *renderer);
-                }
+                if (renderComp) renderComp->render(e, *renderer);
             }
             
             // Present the frame
@@ -39,8 +41,10 @@ namespace ParteeEngine {
         window->show();
     }
 
-    void Engine::addEntity(Entity&& entity) {
-        entities.push_back(std::move(entity));
+    Entity& Engine::createEntity() {
+        int newID = static_cast<int>(entities.size());
+        entities.emplace_back(newID);
+        return entities.back();
     }
     
     Engine::~Engine() {

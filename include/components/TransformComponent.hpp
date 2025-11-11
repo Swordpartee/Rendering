@@ -91,11 +91,6 @@ namespace ParteeEngine {
 
         TransformComponent() : position(0.0f, 0.0f, 0.0f), rotation(0.0f, 0.0f, 0.0f), scale(1.0f, 1.0f, 1.0f) {}
 
-        std::vector<std::type_index> getUpdateDependencies() const
-        {
-            return {typeid(PhysicsComponent), typeid(ColliderComponent)};
-        }
-
         void update(Entity& owner, float dt) override {
         }
     };

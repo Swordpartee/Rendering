@@ -12,16 +12,6 @@ namespace ParteeEngine {
         owner.ensureComponent<TransformComponent>();
     }
 
-    std::vector<std::type_index> RenderComponent::getUpdateDependencies() const 
-    {
-        return {typeid(TransformComponent)};
-    }
-
-    void RenderComponent::update(Entity& owner, float dt)
-    {
-        // Update logic here if needed
-    }
-
     void RenderComponent::render(Entity& owner, Renderer& renderer) 
     {
         if (!visible) return;

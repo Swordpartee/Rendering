@@ -75,5 +75,6 @@
         "compounds": []
     },
     "typescript.suggest.autoImports": false,
-    "editor.codeLens": false
+    "editor.codeLens": false,
+    "C_Cpp.dimInactiveRegions": false
 }

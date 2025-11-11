@@ -16,7 +16,7 @@ namespace ParteeEngine {
 
             void start();
 
-            void addEntity(Entity&& entity);
+            Entity& createEntity();
 
         private:
             int width;

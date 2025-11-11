@@ -9,11 +9,7 @@ namespace ParteeEngine
     void PhysicsComponent::requireDependencies(Entity &owner) {
         owner.ensureComponent<TransformComponent>();
     }
-
-    std::vector<std::type_index> PhysicsComponent::getUpdateDependencies() const {
-        return {};
-    }
-
+    
     void PhysicsComponent::update(Entity& owner, float dt)
     {
         velocity += acceleration * dt;
